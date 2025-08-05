@@ -1,0 +1,50 @@
+# Build directories
+build/
+build-*/
+
+# Qt generated files
+*.moc
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Rust build artifacts
+nostr-helper/target/
+nostr-helper/Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.pro.user
+*.pro.user.*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*~
+*.bak
+*.orig
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Binary files
+kyall
+nostr-helper/target/release/nostr-helper
+
+# Configuration files (may contain sensitive data)
+*.conf
+*.config

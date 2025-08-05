@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=K, Y'all
+Name[en_US]=K, Y'all
+GenericName=Social Posting App
+GenericName[en_US]=Social Posting App
+Comment=Social posting app for KDE and Plasma
+Comment[en_US]=Social posting app for KDE and Plasma
+Icon=kyall
+Exec=kyall
+Categories=Network;Qt;KDE;
+StartupNotify=true
+StartupWMClass=kyall
+Terminal=false
+X-DBUS-StartupType=Unique
+X-KDE-autostart-after=panel

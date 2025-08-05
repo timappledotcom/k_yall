@@ -1,0 +1,10 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>icons/kyall.svg</file>
+        <file>icons/mastodon.svg</file>
+        <file>icons/bluesky.svg</file>
+        <file>icons/microblog.svg</file>
+        <file>icons/nostr.svg</file>
+    </qresource>
+</RCC>
