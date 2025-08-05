@@ -6,7 +6,13 @@ A modern, cross-platform social media posting application built with Qt6 and KDE
 
 ## Features
 
-### 📱 **Multi-Platform Posting**
+#1. **Clone and build**:
+```bash
+git clone https://github.com/timappledotcom/k_yall.git
+cd k_yall
+cd nostr-helper && cargo build --release && cd ..
+mkdir build && cd build && cmake .. && make
+```*Multi-Platform Posting**
 - **Mastodon** - Full support with image uploads
 - **BlueSky** - Complete AT Protocol integration with media support  
 - **Nostr** - Decentralized social networking with Rust-powered reliability
@@ -82,7 +88,7 @@ source ~/.cargo/env
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/k_yall.git
+git clone https://github.com/timappledotcom/k_yall.git
 cd k_yall
 ```
 
@@ -110,7 +116,7 @@ sudo update-desktop-database
 
 ### Binary Releases
 
-Download pre-built binaries from the [Releases](https://github.com/yourusername/k_yall/releases) page.
+Download pre-built binaries from the [Releases](https://github.com/timappledotcom/k_yall/releases) page.
 
 ## Configuration
 
@@ -371,8 +377,8 @@ This project is licensed under the GPL v3.0 License - see the [LICENSE](LICENSE)
 
 ## Support
 
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/yourusername/k_yall/issues)
-- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/yourusername/k_yall/discussions)
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/timappledotcom/k_yall/issues)
+- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/timappledotcom/k_yall/discussions)
 - **Matrix**: Chat with developers in `#kyall:matrix.org` (coming soon)
 
 ---
