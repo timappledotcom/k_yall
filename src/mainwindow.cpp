@@ -77,6 +77,9 @@ void MainWindow::createTrayIcon()
     m_trayIcon->setToolTip(QIcon(":/icons/kyall.svg"), i18n("K, Y'all"), i18n("Social posting app"));
     m_trayIcon->setStatus(KStatusNotifierItem::Active);
     
+    // Disable the standard context menu to avoid duplicate items
+    m_trayIcon->setStandardActionsEnabled(false);
+    
     connect(m_trayIcon, &KStatusNotifierItem::activateRequested,
             this, &MainWindow::showPostWindow);
 }
