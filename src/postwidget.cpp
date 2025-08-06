@@ -26,6 +26,8 @@ PostWidget::PostWidget(AccountManager *accountManager, QWidget *parent)
     , m_accountManager(accountManager)
     , m_imageUploader(new ImageUploader(this))
     , m_postCompletionHandled(false)
+    , m_totalAccountsToPost(0)
+    , m_completedPosts(0)
 {
     setWindowTitle(i18n("New Post - K, Y'all"));
     setModal(false);
@@ -222,8 +224,9 @@ void PostWidget::onPostClicked()
         return;
     }
     
-    // Reset completion flag for new post
+    // Reset completion tracking for new post
     m_postCompletionHandled = false;
+    m_completedPosts = 0;
     
     m_progressBar->setVisible(true);
     m_statusLabel->setVisible(true);
@@ -239,7 +242,9 @@ void PostWidget::onPostClicked()
         }
     }
     
-    qDebug() << "Posting to" << selectedAccounts.size() << "accounts";
+    m_totalAccountsToPost = selectedAccounts.size();
+    qDebug() << "Posting to" << m_totalAccountsToPost << "accounts";
+    
     if (selectedAccounts.isEmpty()) {
         onPostCompleted("none", false, "No accounts selected");
         return;
@@ -284,24 +289,37 @@ void PostWidget::onPostCompleted(const QString &service, bool success, const QSt
 {
     qDebug() << "Post completed for service:" << service << "success:" << success << "error:" << error;
     
+    m_completedPosts++;
+    
     if (success) {
-        m_statusLabel->setText(i18n("Posted successfully to %1!").arg(service));
+        m_statusLabel->setText(i18n("Posted successfully to %1! (%2/%3 complete)")
+                               .arg(service).arg(m_completedPosts).arg(m_totalAccountsToPost));
         m_statusLabel->setStyleSheet("color: green;");
     } else {
-        m_statusLabel->setText(i18n("Failed to post to %1: %2").arg(service, error));
+        m_statusLabel->setText(i18n("Failed to post to %1: %2 (%3/%4 complete)")
+                               .arg(service, error).arg(m_completedPosts).arg(m_totalAccountsToPost));
         m_statusLabel->setStyleSheet("color: red;");
     }
     
-    // Only set up the reset timer once to prevent multiple timer conflicts
-    if (!m_postCompletionHandled) {
+    // Check if all posts are complete
+    if (m_completedPosts >= m_totalAccountsToPost && !m_postCompletionHandled) {
         m_postCompletionHandled = true;
         
+        // Show final status
+        if (m_completedPosts == m_totalAccountsToPost) {
+            m_statusLabel->setText(i18n("All posts completed! (%1/%2)")
+                                   .arg(m_completedPosts).arg(m_totalAccountsToPost));
+        }
+        
         // Use QueuedConnection to ensure safe execution
-        QTimer::singleShot(3000, this, [this]() {
-            if (m_progressBar && m_postButton) { // Check if widgets still exist
+        QTimer::singleShot(2000, this, [this]() {
+            if (m_progressBar && m_postButton && m_postText) { // Check if widgets still exist
                 m_progressBar->setVisible(false);
                 m_postButton->setEnabled(true);
                 m_postCompletionHandled = false; // Reset for next post
+                
+                // Clear the form for a fresh start
+                clearForm();
             }
         });
     }
@@ -314,6 +332,13 @@ void PostWidget::clearForm()
     m_imagesList->clear();
     m_statusLabel->setVisible(false);
     m_progressBar->setVisible(false);
+    m_statusLabel->setStyleSheet(""); // Reset style
+    
+    // Reset completion tracking
+    m_postCompletionHandled = false;
+    m_totalAccountsToPost = 0;
+    m_completedPosts = 0;
+    
     updateCharacterCount();
     onAccountSelectionChanged();
 }

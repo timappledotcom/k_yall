@@ -114,6 +114,9 @@ void MainWindow::showPostWindow()
         m_postWidget = new PostWidget(m_accountManager);
     }
     
+    // Clear the form for a fresh start
+    m_postWidget->clearForm();
+    
     m_postWidget->show();
     m_postWidget->raise();
     m_postWidget->activateWindow();

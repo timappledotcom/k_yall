@@ -22,6 +22,7 @@ class PostWidget : public QDialog
 
 public:
     explicit PostWidget(AccountManager *accountManager, QWidget *parent = nullptr);
+    void clearForm();
 
 private slots:
     void onPostClicked();
@@ -35,7 +36,6 @@ private slots:
 private:
     void setupUI();
     void updateAccountCheckboxes();
-    void clearForm();
     bool validatePost();
     
     AccountManager *m_accountManager;
@@ -67,6 +67,10 @@ private:
     
     // Track post completion to prevent multiple timer setups
     bool m_postCompletionHandled;
+    
+    // Track posting progress across multiple accounts
+    int m_totalAccountsToPost;
+    int m_completedPosts;
 };
 
 #endif // POSTWIDGET_H
