@@ -37,6 +37,7 @@ private:
     void createTrayIcon();
     void createMenus();
     void setupUI();
+    void checkCredentialSecurity();
 
     KStatusNotifierItem *m_trayIcon;
     QMenu *m_trayIconMenu;

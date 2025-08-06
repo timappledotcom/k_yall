@@ -7,6 +7,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+class SecureStorage;
+
 struct Account {
     QString id;
     QString service;        // "mastodon", "bluesky", "microblog", "nostr"
@@ -46,6 +48,10 @@ public:
     // Default Nostr relays
     QStringList getDefaultNostrRelays() const;
     
+    // Secure storage utilities
+    void migrateToSecureStorage();
+    bool hasPlainTextCredentials() const;
+    
     // Posting
     void postToAccounts(const QString &text, const QStringList &imagePaths, 
                        const QStringList &accountIds);
@@ -74,6 +80,9 @@ private:
     MicroBlogService *m_microBlogService;
     NostrService *m_nostrService;
     TestService *m_testService;
+    
+    // Secure storage for credentials
+    SecureStorage *m_secureStorage;
     
     // Default Nostr relays
     QStringList m_defaultNostrRelays;

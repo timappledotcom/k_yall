@@ -49,6 +49,7 @@ set(kyall_SRCS
     src/settings.cpp
     src/accountdialog.cpp
     src/settingsdialog.cpp
+    src/securestorage.cpp
 )
 
 qt6_add_resources(kyall_SRCS resources/resources.qrc)

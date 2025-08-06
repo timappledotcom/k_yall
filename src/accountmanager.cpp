@@ -4,6 +4,7 @@
 #include "microblogservice.h"
 #include "nostrservice.h"
 #include "testservice.h"
+#include "securestorage.h"
 #include <QSettings>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -20,6 +21,7 @@ AccountManager::AccountManager(QObject *parent)
     , m_microBlogService(nullptr)
     , m_nostrService(nullptr)
     , m_testService(nullptr)
+    , m_secureStorage(new SecureStorage())
 {
     // Initialize default Nostr relays (5 most popular)
     m_defaultNostrRelays = {
@@ -75,6 +77,13 @@ void AccountManager::removeAccount(const QString &accountId)
 {
     for (int i = 0; i < m_accounts.size(); ++i) {
         if (m_accounts[i].id == accountId) {
+            // Remove credentials from secure storage
+            QString accessTokenKey = QString("account_%1_accessToken").arg(accountId);
+            QString privateKeyKey = QString("account_%1_privateKey").arg(accountId);
+            
+            m_secureStorage->removeSecure(accessTokenKey);
+            m_secureStorage->removeSecure(privateKeyKey);
+            
             m_accounts.removeAt(i);
             saveSettings();
             emit accountsChanged();
@@ -207,8 +216,35 @@ void AccountManager::loadSettings()
         account.displayName = settings.value("displayName").toString();
         account.username = settings.value("username").toString();
         account.serverUrl = settings.value("serverUrl").toString();
-        account.accessToken = settings.value("accessToken").toString();
-        account.privateKey = settings.value("privateKey").toString();
+        
+        // Load sensitive credentials from secure storage
+        QString accessTokenKey = QString("account_%1_accessToken").arg(accountId);
+        QString privateKeyKey = QString("account_%1_privateKey").arg(accountId);
+        
+        account.accessToken = m_secureStorage->retrieveSecure(accessTokenKey);
+        account.privateKey = m_secureStorage->retrieveSecure(privateKeyKey);
+        
+        // If secure storage is empty, try to migrate from old plain text storage
+        if (account.accessToken.isEmpty() && settings.contains("accessToken")) {
+            QString oldToken = settings.value("accessToken").toString();
+            if (!oldToken.isEmpty()) {
+                account.accessToken = oldToken;
+                m_secureStorage->storeSecure(accessTokenKey, oldToken);
+                settings.remove("accessToken"); // Remove from plain text storage
+                qDebug() << "Migrated access token to secure storage for account:" << accountId;
+            }
+        }
+        
+        if (account.privateKey.isEmpty() && settings.contains("privateKey")) {
+            QString oldKey = settings.value("privateKey").toString();
+            if (!oldKey.isEmpty()) {
+                account.privateKey = oldKey;
+                m_secureStorage->storeSecure(privateKeyKey, oldKey);
+                settings.remove("privateKey"); // Remove from plain text storage
+                qDebug() << "Migrated private key to secure storage for account:" << accountId;
+            }
+        }
+        
         account.defaultForPosting = settings.value("defaultForPosting", false).toBool();
         account.enabled = settings.value("enabled", true).toBool();
         
@@ -248,8 +284,18 @@ void AccountManager::saveSettings()
         settings.setValue("displayName", account.displayName);
         settings.setValue("username", account.username);
         settings.setValue("serverUrl", account.serverUrl);
-        settings.setValue("accessToken", account.accessToken);
-        settings.setValue("privateKey", account.privateKey);
+        
+        // Store sensitive credentials in secure storage
+        QString accessTokenKey = QString("account_%1_accessToken").arg(account.id);
+        QString privateKeyKey = QString("account_%1_privateKey").arg(account.id);
+        
+        m_secureStorage->storeSecure(accessTokenKey, account.accessToken);
+        m_secureStorage->storeSecure(privateKeyKey, account.privateKey);
+        
+        // Don't store sensitive data in plain text anymore
+        // settings.setValue("accessToken", account.accessToken);  // REMOVED
+        // settings.setValue("privateKey", account.privateKey);    // REMOVED
+        
         settings.setValue("relays", account.relays);
         settings.setValue("defaultForPosting", account.defaultForPosting);
         settings.setValue("enabled", account.enabled);
@@ -258,4 +304,75 @@ void AccountManager::saveSettings()
     }
     
     settings.endGroup();
+}
+
+void AccountManager::migrateToSecureStorage()
+{
+    QSettings settings;
+    settings.beginGroup("Accounts");
+    
+    QStringList accountIds = settings.childGroups();
+    bool migrated = false;
+    
+    for (const QString &accountId : accountIds) {
+        settings.beginGroup(accountId);
+        
+        // Check for plain text credentials
+        if (settings.contains("accessToken")) {
+            QString accessToken = settings.value("accessToken").toString();
+            if (!accessToken.isEmpty()) {
+                QString accessTokenKey = QString("account_%1_accessToken").arg(accountId);
+                m_secureStorage->storeSecure(accessTokenKey, accessToken);
+                settings.remove("accessToken");
+                migrated = true;
+                qDebug() << "Migrated access token for account:" << accountId;
+            }
+        }
+        
+        if (settings.contains("privateKey")) {
+            QString privateKey = settings.value("privateKey").toString();
+            if (!privateKey.isEmpty()) {
+                QString privateKeyKey = QString("account_%1_privateKey").arg(accountId);
+                m_secureStorage->storeSecure(privateKeyKey, privateKey);
+                settings.remove("privateKey");
+                migrated = true;
+                qDebug() << "Migrated private key for account:" << accountId;
+            }
+        }
+        
+        settings.endGroup();
+    }
+    
+    settings.endGroup();
+    
+    if (migrated) {
+        qDebug() << "Credential migration to secure storage completed";
+        // Reload accounts to pick up the migrated credentials
+        m_accounts.clear();
+        loadSettings();
+    }
+}
+
+bool AccountManager::hasPlainTextCredentials() const
+{
+    QSettings settings;
+    settings.beginGroup("Accounts");
+    
+    QStringList accountIds = settings.childGroups();
+    
+    for (const QString &accountId : accountIds) {
+        settings.beginGroup(accountId);
+        
+        if (settings.contains("accessToken") && !settings.value("accessToken").toString().isEmpty()) {
+            return true;
+        }
+        if (settings.contains("privateKey") && !settings.value("privateKey").toString().isEmpty()) {
+            return true;
+        }
+        
+        settings.endGroup();
+    }
+    
+    settings.endGroup();
+    return false;
 }

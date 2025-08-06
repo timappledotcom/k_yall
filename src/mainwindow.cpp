@@ -33,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent)
     createTrayIcon();
     createMenus();
     
+    // Check for and migrate plain text credentials
+    checkCredentialSecurity();
+    
     // Hide on startup, let tray icon handle showing
     hide();
 }
@@ -172,5 +175,31 @@ void MainWindow::closeEvent(QCloseEvent *event)
         event->ignore();
     } else {
         event->accept();
+    }
+}
+
+void MainWindow::checkCredentialSecurity()
+{
+    if (m_accountManager->hasPlainTextCredentials()) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            i18n("Security Update Available"),
+            i18n("K, Y'all has detected credentials stored in plain text from a previous version.\n\n"
+                 "For your security, these credentials should be migrated to encrypted storage.\n\n"
+                 "This is a one-time migration that will encrypt your access tokens and private keys.\n\n"
+                 "Would you like to migrate your credentials now?"),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::Yes
+        );
+        
+        if (reply == QMessageBox::Yes) {
+            m_accountManager->migrateToSecureStorage();
+            QMessageBox::information(
+                this,
+                i18n("Migration Complete"),
+                i18n("Your credentials have been successfully migrated to encrypted storage.\n\n"
+                     "All access tokens and private keys are now stored securely.")
+            );
+        }
     }
 }
